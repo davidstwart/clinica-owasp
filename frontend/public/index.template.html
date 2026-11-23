@@ -7,8 +7,10 @@
     <!--
       ISO/IEC 27001:2022 — A.8.25 Uso de la criptografía / A.8.26 Seguridad de
       aplicaciones informáticas.
-      Content-Security-Policy declarativa: si un CDN se compromete, el
-      navegador rechaza el recurso con hash incorrecto (Subresource Integrity).
+      Plantilla de la Content-Security-Policy. `scripts/generate-index.js`
+      sustituye el marcador del connect-src por el origen de REACT_APP_API_URL
+      antes de `npm start` / `npm run build`, de modo que la política no quede anclada
+      a localhost cuando se despliega en Vercel o Render.
       `unsafe-inline` en estilos es necesario porque React inyecta estilos y
       Bootstrap aplica estilos en línea; no se permite `unsafe-eval`.
     -->
@@ -20,7 +22,7 @@
         style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com data:;
         img-src 'self' data:;
-        connect-src 'self' http://localhost:8000;
+        connect-src 'self' __API_ORIGIN__;
         frame-ancestors 'none';
         base-uri 'self';
         form-action 'self';

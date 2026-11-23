@@ -91,6 +91,13 @@ npm start
 
 ---
 
+## 🌐 Despliegue
+
+Instrucciones y archivos de configuración para subir el sistema a Render y/o Vercel:
+[DEPLOYMENT.md](DEPLOYMENT.md) (`render.yaml` y `vercel.json`).
+
+---
+
 ## 🧪 Verificación
 
 ```bash

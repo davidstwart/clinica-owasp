@@ -91,6 +91,9 @@ class Settings(BaseSettings):
     TRUSTED_HOSTS: list[str] = Field(
         default_factory=lambda: ["localhost", "127.0.0.1", "testserver"]
     )
+    # Render inyecta automáticamente el hostname público del servicio. Se añade
+    # a TRUSTED_HOSTS para no tener que repetirlo en cada Blueprint (A.8.9).
+    RENDER_EXTERNAL_HOSTNAME: str = ""
     HABILITAR_DOCS: bool = True
     # A.8.24 — en producción toda petición por HTTP se redirige a HTTPS
     # (cabecera `X-Forwarded-Proto` respetada cuando hay proxy delante).
@@ -130,6 +133,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _validar_entorno(self):
+        if self.RENDER_EXTERNAL_HOSTNAME and self.RENDER_EXTERNAL_HOSTNAME not in self.TRUSTED_HOSTS:
+            self.TRUSTED_HOSTS = [*self.TRUSTED_HOSTS, self.RENDER_EXTERNAL_HOSTNAME]
         if self.ENVIRONMENT == "production":
             if self.DEBUG:
                 raise ValueError("DEBUG debe ser False en producción (A.8.9)")
