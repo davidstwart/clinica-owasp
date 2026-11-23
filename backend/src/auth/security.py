@@ -23,8 +23,8 @@ from uuid import uuid4
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
+import bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from ..auditoria.service import registrar_log
@@ -35,8 +35,8 @@ from .models import RolUsuario, Usuario
 
 logger = logging.getLogger("clinica.auth")
 
-# OWASP A02 / A07 — bcrypt para contraseñas (coste ajustable desde configuración)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=settings.BCRYPT_ROUNDS)
+# OWASP A02 / A07 — bcrypt directo (coste ajustable desde configuración).
+# Se evita passlib: su detección de backend es incompatible con bcrypt >= 4.1.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 # Variante sin error automático: permite endpoints que aceptan también el
 # token de desafío MFA en el cuerpo (flujo de configuración del segundo factor).
@@ -47,27 +47,37 @@ BLOQUEO_MINUTOS = settings.BLOQUEO_MINUTOS
 
 # Hash señuelo: coste equivalente al de un usuario real. Permite que el tiempo
 # de respuesta de un login con correo inexistente sea similar al de uno válido.
-_HASH_SENUELO = pwd_context.hash("clave-senuelo-sin-usuario-000000000000")
+_HASH_SENUELO = bcrypt.hashpw(
+    b"clave-senuelo-sin-usuario-000000000000",
+    bcrypt.gensalt(rounds=settings.BCRYPT_ROUNDS),
+).decode("ascii")
 CABECERA_CAMBIO_CONTRASENA = "X-Auth-Error-Code"
 
 
 # ── Contraseñas ───────────────────────────────────────────────────────────────
 def verificar_password(plano: str, hashed: str) -> bool:
     try:
-        return pwd_context.verify(plano, hashed)
-    except ValueError:
+        return bcrypt.checkpw(plano.encode("utf-8"), hashed.encode("utf-8"))
+    except (ValueError, TypeError):
         # bcrypt no puede verificar hashes malformados: se trata como fallido.
         logger.warning("Hash de contraseña con formato inesperado")
         return False
 
 
 def hashear_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt(rounds=settings.BCRYPT_ROUNDS),
+    ).decode("ascii")
 
 
 def verificar_password_sin_usuario(plano: str) -> None:
     """Consume tiempo equivalente a una verificación real (anti-enumeración)."""
-    pwd_context.verify(plano, _HASH_SENUELO)
+    try:
+        bcrypt.checkpw(plano.encode("utf-8")[:72], _HASH_SENUELO.encode("ascii"))
+    except ValueError:
+        # Longitudes fuera del límite de bcrypt no deben alterar el flujo.
+        pass
 
 
 # ── Tokens ───────────────────────────────────────────────────────────────────
