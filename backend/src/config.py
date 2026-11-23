@@ -86,6 +86,9 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     BIND_HOST: str = "127.0.0.1"
     BIND_PORT: int = Field(default=8000, ge=1, le=65535)
+    # Ejecuta `seed.py` al arrancar (idempotente). Útil en plataformas sin
+    # acceso a shell, como el plan gratuito de Render.
+    SEED_ON_START: bool = False
 
     # ── Persistencia ─────────────────────────────────────────────────────────
     DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/clinica_db"

@@ -153,6 +153,13 @@ from .auditoria.models import AuditoriaLog  # noqa: E402,F401
 Base.metadata.create_all(bind=engine)
 asegurar_esquema()
 
+# A.8.32 — carga inicial de datos de demostración. `seed.py` es idempotente,
+# así que puede ejecutarse en cada arranque sin duplicar registros.
+if settings.SEED_ON_START:
+    logger.info("SEED_ON_START: ejecutando carga inicial de datos")
+    import seed  # noqa: E402,F401
+    logger.info("SEED_ON_START: carga inicial completada")
+
 # ── Routers ──────────────────────────────────────────────────────────────────
 from .auth.router import router as auth_router  # noqa: E402
 from .pacientes.router import router as pacientes_router  # noqa: E402

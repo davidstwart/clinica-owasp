@@ -20,7 +20,7 @@ Vercel se usa únicamente para el sitio estático de React.
    - `clinica-owasp-db` (PostgreSQL)
    - `clinica-owasp-web` (sitio estático)
 5. **Apply**. Espera a que los tres recursos estén `Live`.
-6. Tras el primer deploy, `initialDeployHook` ejecuta `python seed.py`.
+6. Al arrancar, `SEED_ON_START=true` ejecuta `python seed.py` (idempotente).
    Revisa los logs del servicio API: ahí se imprime **una sola vez** la clave
    TOTP del administrador. Guárdala en tu autenticador.
 7. Abre la URL del sitio web (`https://clinica-owasp-web.onrender.com`) y entra
@@ -71,7 +71,7 @@ Vercel se usa únicamente para el sitio estático de React.
 | Hosts confiables | Render inyecta `RENDER_EXTERNAL_HOSTNAME`; `backend/src/config.py` lo añade a `TRUSTED_HOSTS`. |
 | Formato de listas | `ALLOWED_ORIGINS` y `TRUSTED_HOSTS` aceptan `a,b,c` o `["a","b"]` en variables de entorno. |
 | TLS | `FORZAR_TLS=true` + `--proxy-headers` evitan redirecciones infinitas detrás del proxy de Render. |
-| Semilla | `initialDeployHook` solo corre en el **primer** deploy. Si se recrea la BD, ejecuta `python seed.py` desde el Shell de Render. |
+| Semilla | `SEED_ON_START=true` corre `seed.py` en cada arranque (idempotente). El plan Free de Render no tiene Shell; no hace falta abrirlo. |
 | Plan gratuito | El web service se suspende por inactividad (primera petición lenta) y la BD gratuita tiene limitaciones de retención. Revisa las condiciones vigentes de Render. |
 
 ## Seguridad

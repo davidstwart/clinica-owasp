@@ -13,11 +13,12 @@ services:
     # sin él, el limitador de tasa y el forzado de HTTPS ven datos erróneos.
     startCommand: 'uvicorn src.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"'
     healthCheckPath: /health
-    # Datos de demostración, una sola vez tras el primer deploy (idempotente).
-    initialDeployHook: python seed.py
     envVars:
       - key: ENVIRONMENT
         value: production
+      # El plan gratuito de Render no tiene Shell: la semilla corre al arrancar.
+      - key: SEED_ON_START
+        value: 'true'
       - key: DEBUG
         value: 'false'
       - key: HABILITAR_DOCS
