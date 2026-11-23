@@ -1,0 +1,17 @@
+frontend/node_modules/
+frontend/build/
+backend/venv/
+backend/.env
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+*.db
+*.db-journal
+.DS_Store
+.env.sonar
+.scannerwork/
+coverage.xml
+frontend/coverage/
