@@ -69,6 +69,7 @@ Vercel se usa únicamente para el sitio estático de React.
 | Health check | `/health` |
 | CSP del frontend | Se genera desde `REACT_APP_API_URL` mediante `frontend/scripts/generate-index.js` (`prestart` / `prebuild`). La plantilla es `frontend/public/index.template.html`. |
 | Hosts confiables | Render inyecta `RENDER_EXTERNAL_HOSTNAME`; `backend/src/config.py` lo añade a `TRUSTED_HOSTS`. |
+| Formato de listas | `ALLOWED_ORIGINS` y `TRUSTED_HOSTS` aceptan `a,b,c` o `["a","b"]` en variables de entorno. |
 | TLS | `FORZAR_TLS=true` + `--proxy-headers` evitan redirecciones infinitas detrás del proxy de Render. |
 | Semilla | `initialDeployHook` solo corre en el **primer** deploy. Si se recrea la BD, ejecuta `python seed.py` desde el Shell de Render. |
 | Plan gratuito | El web service se suspende por inactividad (primera petición lenta) y la BD gratuita tiene limitaciones de retención. Revisa las condiciones vigentes de Render. |

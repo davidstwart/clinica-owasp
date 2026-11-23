@@ -9,6 +9,7 @@ Configuración centralizada y validada. El sistema falla de forma explícita
 ("fail-closed") cuando la configuración es insegura en producción, en lugar de
 arrancar con valores por defecto inseguros.
 """
+import json
 import secrets
 from typing import Literal
 
@@ -30,11 +31,17 @@ SECRETOS_PROHIBIDOS = {
 
 
 def _separar_lista(valor) -> list[str]:
-    """Acepta `a,b,c` o `["a","b"]` desde el .env y devuelve una lista."""
+    """Acepta `a,b,c` o `["a","b"]` desde el entorno y devuelve una lista."""
     if valor is None:
         return []
     if isinstance(valor, str):
-        return [p.strip() for p in valor.replace("[", "").replace("]", "").split(",") if p.strip()]
+        texto = valor.strip()
+        if texto.startswith("["):
+            try:
+                return [str(p).strip() for p in json.loads(texto)]
+            except json.JSONDecodeError:
+                pass
+        return [p.strip() for p in texto.replace("[", "").replace("]", "").split(",") if p.strip()]
     return list(valor)
 
 
@@ -45,6 +52,32 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra="ignore",
     )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls,
+        init_settings,
+        env_settings,
+        dotenv_settings,
+        file_secret_settings,
+    ):
+        """
+        pydantic-settings 2.3 decodifica los campos `list[str]` como JSON antes
+        de validarlos. Desactivamos esa decodificación solo en las fuentes de
+        entorno para que `_separar_lista` acepte también `a,b,c` (A.8.9).
+        """
+        campos_lista = {"ALLOWED_ORIGINS", "TRUSTED_HOSTS"}
+        for fuente in (env_settings, dotenv_settings):
+            original = fuente.prepare_field_value
+
+            def preparar(field_name, field, value, value_is_complex, _original=original):
+                if field_name in campos_lista:
+                    return value
+                return _original(field_name, field, value, value_is_complex)
+
+            fuente.prepare_field_value = preparar
+        return init_settings, env_settings, dotenv_settings, file_secret_settings
 
     # ── Entorno ──────────────────────────────────────────────────────────────
     ENVIRONMENT: Literal["development", "testing", "production"] = "development"
